@@ -24,13 +24,17 @@ var port= server.address().port
 	app.use(bodyParser.urlencoded({extended:false}))
 
 	app.post('/serviceList', function(req,res){
-		var data = JSON.stringify(req.body.Reset);
-		client.set('Reset',data);
+		//console.log(typeof(req.body.reset));
+
+		var data = JSON.stringify(req.body.reset);
+
+		client.set('reset',data);
 		publisher.publish("serviceList",data);
 		console.log("Client made a RESET");
 		console.log(data);
-		res.sendStatus(200);
+		//res.sendStatus(200);
 		res.end("Reset Done!!");
+		
 	})
 
 	app.post('/saveList',function(req,res){
@@ -39,8 +43,9 @@ var port= server.address().port
 		publisher.publish("saveList",data);
 		console.log("List of services saved");
 		console.log(data);
-		res.sendStatus(200);
-		res.end("Services saveds");
+		//res.sendStatus(200);
+		res.end("Services SAVED!!");
+		
 	})
 
 	app.post('/serviceConfig',function(req,res){
@@ -58,8 +63,8 @@ var port= server.address().port
 					{
 						console.log('successfully added json data');
 						console.log(reply);
-						res.sendStatus(200);
-						res.end(reply);
+						//res.sendStatus(200);
+						res.end("Configuration SAVED!!");
 					}			
 			});
 	
@@ -77,8 +82,8 @@ var port= server.address().port
 				}else{
 					console.log("successfully sent json data");
 					console.log(data);
-					res.sendStatus(200);
 					res.end(data);
+					
 				}
 			});
 		
@@ -119,13 +124,13 @@ var port= server.address().port
 	});
 
 })*/
-/* app.get('/stats',function(req, res){
+/*app.get('/stats',function(req, res){
 	fs.readFile(__dirname+"/"+"user.json",function(err,data){
 		
 	response=JSON.stringify(JSON.parse(data));
-	//console.log(response["config"]["vlan"][0]["firewall"][1].type);
+	console.log(response["config"]["vlan"][0]["firewall"][1].type);
 	//client.set('json',response["config"]["vlan"][0]["firewall"][1].type);
-	client.set('json',response);
+	//client.set('json',response);
 	});
 	
 		
@@ -150,15 +155,4 @@ app.get('/stats',function(req, res){
 	response=JSON.parse(data);
 	console.log(response["config"]["vlan"][0]["firewall"][1].type);
 	client.set('json',response["config"]["vlan"][0]["firewall"][1].type);
-	});*/
-
-
-
-
-
-
-
-
-
-
-	
+	})*/
