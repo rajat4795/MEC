@@ -1,0 +1,48 @@
+{
+    "config":
+			{
+				"vlan":[{
+					"Id":5,
+					"firewall":[{
+							"type": 1,
+							"ruleid":1,
+							 "scr_ip": "10.0.0.2",
+							 "dest_ip": "10.0.0.8",
+							 "protocol": "TCP"
+						      },
+						      {
+							"type":2,
+							"ruleid":2,
+							 "scr_ip": "10.0.0.9",
+							 "dest_ip": "10.0.0.3",
+							 "protocol": "TCP"
+						     }],
+					  "dns":{
+							"type":"DNS-mask 1",
+						    "URL":"www.google.com"
+						          },
+					  "telemetry":{
+							"type":"Telemetry1"
+						          }
+
+				       },
+
+				{
+					"Id":6,
+					"firewall":[{
+							"type": 2,
+							"ruleid":1,
+							"scr_ip": "10.0.0.2",
+							"dest_ip": "10.0.0.4",
+							"protocol": "TCP"
+						      }],
+						      
+					  "dns":{
+							"type":"DNS-Mask 2",
+						  	"URL":"www.trello.com"
+						          }
+					  						
+				  }],
+				"action":"Apply"
+			}
+}
