@@ -1,15 +1,13 @@
 var express = require ('express');
 var app = express();
-var fs= require ('fs');
+//var fs= require ('fs');
 var redis=require ('redis');
 var publisher = redis.createClient();
-var subscriber = redis.createClient();
-
+//var subscriber = redis.createClient();
 var bodyParser =require('body-parser');
-
-
-
+var util =require('util');
 var client = redis.createClient();
+
 
 var server =app.listen(8081,function(){
 var port= server.address().port
@@ -25,7 +23,7 @@ var port= server.address().port
 
 	app.post('/serviceList', function(req,res){
 		
-		var data = JSON.stringify(req.body.reset);
+		var data = JSON.stringify(req.body);
 		client.set('reset',data);
 		publisher.publish("serviceList",data);
 		console.log("Client made a RESET");
@@ -34,7 +32,7 @@ var port= server.address().port
 		})
 		
 	app.post('/saveList',function(req,res){
-		var data = JSON.stringify(req.body.services);
+		var data = JSON.stringify(req.body);
 		client.set('services',data);
 		publisher.publish("saveList",data);
 		console.log("List of services saved");
@@ -44,66 +42,48 @@ var port= server.address().port
 	})
 
 	app.post('/serviceConfig',function(req,res){
-		var vlan=req.body["config"]["vlan"][0].Id;
-		//console.log('config'+vlan);
+		var vlan=req.body["config"]["vlan"][0].id;
 		console.log(vlan);
-		if(vlan==5){
-			var action=req.body["config"].action;
+		var action=req.body["config"].action;
 		console.log(action);
 		if(action == 'add')
 		{
-			var data = JSON.stringify(req.body.config);
-		client.set('config5',data);
+			//console.log(JSON.stringify(req.body));
+		var data = JSON.stringify(req.body);
+		client.set('config'+vlan,data);
 		publisher.publish("serviceConfig",data);
-		console.log('successfully added json data');
+		var msg= util.format('Configuration for vlan %s SAVED!',vlan);
+		console.log(msg);
 		console.log(data);
-		res.end("Configuration for vlan 5 SAVED!!");	
+		res.end(msg);	
 		}
 			
 		 if(action == 'delete'){
-			client.del('config5');
+			client.del('config'+vlan);
 			publisher.publish("serviceConfig","Configuration deleted");
-			console.log('configuration for vlan 5 DELETED!!');
-			res.end('config5 deleted');
+			var msg=util.format('configuration for vlan %s DELETED!!',vlan)
+			console.log(msg);
+			res.end(msg);
 		}
-	}
-		if(vlan==6){
-			var action=req.body["config"].action;
-		console.log(action);
-		if(action == 'add')
-		{
-			var data = JSON.stringify(req.body.config);
-		client.set('config6',data);
-		publisher.publish("serviceConfig",data);
-		console.log('successfully added json data');
-		console.log(data);
-		res.end("Configuration for vlan 6 SAVED!!");	
-		}
-			
-		 if(action == 'delete'){
-			client.del('config6');
-			publisher.publish("serviceConfig","Configuration deleted");
-			console.log('configuration for vlan 6 DELETED!!')
-			res.end('config6 deleted');
-		}
-	}
 		
-	
 		})
 
 	
 
 	app.get('/stats',function(req,res){
+		
 		client.get('stats', function(err, data){
 			if(err){
 				throw err;
 			}else{
 				console.log("successfully sent json data");
+
 					console.log(data);
 					res.end(data);
 			}
 					
-			});
+			});	
+		
 
 	})
 
@@ -143,6 +123,54 @@ var port= server.address().port
 		}
 		});
 	})
+
+	app.post('/a',function(req,res){
+		var data = JSON.stringify(req.body);
+		publisher.publish("stats",data);
+		client.set('stats',data);
+		res.end();
+	})
+
+	/*if(vlan==5){
+			var action=req.body["config"].action;
+		console.log(action);
+		if(action == 'add')
+		{
+			var data = JSON.stringify(req.body.config);
+		client.set('config5',data);
+		publisher.publish("serviceConfig",data);
+		console.log('successfully added json data');
+		console.log(data);
+		res.end("Configuration for vlan 5 SAVED!!");	
+		}
+			
+		 if(action == 'delete'){
+			client.del('config5');
+			publisher.publish("serviceConfig","Configuration deleted");
+			console.log('configuration for vlan 5 DELETED!!');
+			res.end('config5 deleted');
+		}
+	}
+		if(vlan==6){
+			var action=req.body["config"].action;
+		console.log(action);
+		if(action == 'add')
+		{
+			var data = JSON.stringify(req.body.config);
+		client.set('config6',data);
+		publisher.publish("serviceConfig",data);
+		console.log('successfully added json data');
+		console.log(data);
+		res.end("Configuration for vlan 6 SAVED!!");	
+		}
+			
+		 if(action == 'delete'){
+			client.del('config6');
+			publisher.publish("serviceConfig","Configuration deleted");
+			console.log('configuration for vlan 6 DELETED!!')
+			res.end('config6 deleted');
+		}
+	}*/
 
 /*var action=req.body["config"].action;
 		console.log(action);
