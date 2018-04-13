@@ -5,8 +5,6 @@ var publisher = redis.createClient();
 var bodyParser =require('body-parser');
 var util =require('util');
 var client = redis.createClient();
-var scanner =require('redis-scanner');
-scanner.bindScanners(client);
 
 
 var server =app.listen(8081,function(){
@@ -20,17 +18,15 @@ var host= server.address().address
 
 	app.use(bodyParser.json())
 	app.use(bodyParser.urlencoded({extended:false}))
-	
 
-	app.post('/serviceList', function(req,res){
-		
+	app.post('/login',function(req,res){
 		var data = JSON.stringify(req.body);
-		client.set('reset',data);
-		publisher.publish("mgmt",data);
-		console.log("Client made a RESET");
-		console.log(data);
-		res.end("Reset Done!!");	
-		})
+		var user = req.body["login"].username;
+		client.set('login',data);
+		var msg= util.format('logged in as %s',user);
+		console.log(msg);
+		res.end(msg);
+	})
 		
 	app.post('/saveList',function(req,res){
 		var data = JSON.stringify(req.body);
@@ -42,37 +38,48 @@ var host= server.address().address
 		
 	})
 
+	app.post('/serviceList', function(req,res){
+		
+		var data = JSON.stringify(req.body);
+		client.set('reset',data);
+		publisher.publish("mgmt",data);
+		console.log("Client made a RESET");
+		console.log(data);
+		res.end("Reset Done!!");	
+		})
+
 	app.post('/serviceConfig',function(req,res){
 		var vlan=req.body["config"]["vlan"][0].id;
 		console.log(vlan);
 		var action=req.body["config"].action;
 		console.log(action);
 		if(action == 'add')
-		{
-		var data = JSON.stringify(req.body);
-		client.set('config'+vlan,data);
-		publisher.publish("fw",data);
-		publisher.publish("dns",data);
-		publisher.publish("mgmt",data);
-		var msg= util.format('Configuration for vlan %s SAVED!',vlan);
-		console.log(msg);
-		console.log(data);
-		res.end(msg);	
-		}
+			{
+				var data = JSON.stringify(req.body);
+				client.set('config'+vlan,data);
+				publisher.publish("fw",data);
+				publisher.publish("dns",data);
+				publisher.publish("mgmt",data);
+				var msg= util.format('Configuration for vlan %s SAVED!',vlan);
+				console.log(msg);
+				console.log(data);
+				res.end(msg);	
+			}
 			
-		 if(action == 'delete'){
-			var data=client.get('congig'+vlan);
-			/*publisher.publish("fw","Configuration deleted");
-			publisher.publish("fw",data);
-			publisher.publish("dns","Configuration deleted");
-			publisher.publish("dns",data);
-			publisher.publish("mgmt","Configuration deleted");
-			publisher.publish("mgmt",data);*/
-			client.del('config'+vlan);
-			var msg=util.format('configuration for vlan %s DELETED!!',vlan)
-			console.log(msg);
-			res.end(msg);
-		}
+		 if(action == 'delete')
+		 	{
+				var data=client.get('congig'+vlan);
+				/*publisher.publish("fw","Configuration deleted");
+				publisher.publish("fw",data);
+				publisher.publish("dns","Configuration deleted");
+				publisher.publish("dns",data);
+				publisher.publish("mgmt","Configuration deleted");
+				publisher.publish("mgmt",data);*/
+				client.del('config'+vlan);
+				var msg=util.format('configuration for vlan %s DELETED!!',vlan)
+				console.log(msg);
+				res.end(msg);
+			}
 		
 		})
 
@@ -84,27 +91,15 @@ var host= server.address().address
 		res.end("stats saved");
 	})
 
-	app.get('/stats',function(req,res){
-		client.get('stats', function(err, data){
+	app.get('/login',function(req,res){
+		client.get('login',function(err,data){
 			if(err){
 				throw err;
 			}else{
-				console.log("successfully sent json data");
-					console.log(data);
-					res.end(data);
-			}		
-			});	
-	})
-
-	app.get('/serviceList',function(req,res){
-		client.get('reset',function(err,data){
-			if(err){
-				throw err;
-			}else{
-			console.log('Reset data stored in Redis DB');
-			console.log(data);
-			res.end(data);
-		}
+				console.log("user credentials are:");
+				console.log(data);
+				res.end(data);
+				}
 		});
 	})
 
@@ -120,7 +115,6 @@ var host= server.address().address
 			
 		});
 	})
-
 
 	app.get('/serviceConfig',function(req,res){
 	var file=[];
@@ -145,6 +139,69 @@ var host= server.address().address
 			res.end(Data);
 		});		
 		})
+
+
+	app.get('/serviceList',function(req,res){
+		client.get('reset',function(err,data){
+			if(err){
+				throw err;
+			}else{
+			console.log('Reset data stored in Redis DB');
+			console.log(data);
+			res.end(data);
+		}
+		});
+	})
+
+	app.get('/stats',function(req,res){
+		client.get('stats', function(err, data){
+			if(err){
+				throw err;
+			}else{
+				console.log("successfully sent json data");
+					console.log(data);
+					res.end(data);
+			}		
+			});	
+	})
+	
+
+	/*app.post('/login',function(req,res){
+		var data = JSON.stringify(req.body);
+		var user = req.body["login"].username;
+		var pwd = req.body["login"].password;
+		client.set('login'+user,data);
+		client.set('login'+pwd,data);
+		var msg= util.format('logged in as %s with password %s',user,pwd);
+		console.log(msg);
+
+		res.end(msg);
+	})*/
+
+
+/*app.get('login'function(req,res){
+	var file=[];
+	client.keys('login*',function(err,keys){
+		if(err)
+			return console.log(err);
+		keys.forEach(function(reply,index){
+			client.get(reply,function(err,data){
+				var resData =JSON.parse(data);
+				for(var key in resData){
+					file.push(resData[key]);	
+				}
+				console.log(file);
+				client.set('login',JSON.stringify(file));
+			});
+			
+		})
+			});
+		
+		client.get('login',function(err,data){
+			var Data= '{"login":'+data+"}";
+			res.end(Data);
+		});
+})*/	
 
 
 
